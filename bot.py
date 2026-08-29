@@ -45,25 +45,26 @@ _alertas_activas = {symbol: False for symbol in SYMBOLS}
 
 
 def obtener_precios_bitunix(symbols):
-    """Devuelve un diccionario {symbol: precio} usando lastPrice de Bitunix."""
-    try:
-        params = {"symbols": ",".join(symbols)}
-        response = requests.get(BITUNIX_URL, params=params, timeout=15)
-        response.raise_for_status()
-        data = response.json()
+    """Devuelve un diccionario {symbol: precio} usando lastPrice de Bitunix.
+    Consulta cada símbolo por separado para que un error en uno no
+    bloquee la consulta de los demás."""
+    precios = {}
+    for symbol in symbols:
+        try:
+            response = requests.get(BITUNIX_URL, params={"symbols": symbol}, timeout=15)
+            response.raise_for_status()
+            data = response.json()
 
-        if data.get("code") not in (0, None):
-            log.error(f"Bitunix respondió con error: {data.get('msg', data)}")
-            return {}
+            if data.get("code") not in (0, None):
+                log.warning(f"Bitunix: {symbol} no disponible ({data.get('msg', data)}).")
+                continue
 
-        items = data.get("data") or []
-        precios = {}
-        for item in items:
-            precios[item["symbol"]] = float(item["lastPrice"])
-        return precios
-    except Exception as e:
-        log.error(f"Error consultando precios en Bitunix: {e}")
-        return {}
+            items = data.get("data") or []
+            for item in items:
+                precios[item["symbol"]] = float(item["lastPrice"])
+        except Exception as e:
+            log.error(f"Error consultando {symbol} en Bitunix: {e}")
+    return precios
 
 
 def obtener_precio_binance(symbol):
