@@ -34,7 +34,9 @@ SPREAD_THRESHOLD = float(os.environ.get("SPREAD_THRESHOLD", "0.5"))
 CHECK_INTERVAL = int(os.environ.get("CHECK_INTERVAL", "60"))
 
 BITUNIX_URL = "https://fapi.bitunix.com/api/v1/futures/market/tickers"
-BINANCE_URL = "https://api.binance.com/api/v3/ticker/price"
+# Endpoint público de solo datos de mercado, sin restricción geográfica
+# (a diferencia de api.binance.com, que bloquea IPs de EE.UU. con error 451)
+BINANCE_URL = "https://data-api.binance.vision/api/v3/ticker/price"
 
 # Para no repetir la misma alerta cada minuto mientras el spread siga
 # abierto, guardamos si ya se notificó para cada símbolo y solo
@@ -49,8 +51,14 @@ def obtener_precios_bitunix(symbols):
         response = requests.get(BITUNIX_URL, params=params, timeout=15)
         response.raise_for_status()
         data = response.json()
+
+        if data.get("code") not in (0, None):
+            log.error(f"Bitunix respondió con error: {data.get('msg', data)}")
+            return {}
+
+        items = data.get("data") or []
         precios = {}
-        for item in data.get("data", []):
+        for item in items:
             precios[item["symbol"]] = float(item["lastPrice"])
         return precios
     except Exception as e:
