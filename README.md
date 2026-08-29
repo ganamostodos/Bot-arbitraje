@@ -1,8 +1,21 @@
 # Bot de Notificaciones de Arbitraje - Bitunix vs Binance
 
-Compara precios de ADA, AVAX y TON entre Bitunix y Binance cada minuto, y
-envía una alerta a Telegram cuando la diferencia (spread) supera el umbral
-configurado. **No ejecuta ninguna operación**, solo notifica.
+Compara el **bid/ask real** (no el último precio negociado) de varios pares
+entre Bitunix y Binance cada minuto, y envía una alerta a Telegram cuando
+hay una oportunidad de arbitraje ejecutable. **No ejecuta ninguna
+operación**, solo notifica.
+
+## Cómo funciona la comparación
+
+Una oportunidad de arbitraje real se basa en el precio al que realmente
+puedes comprar (ask) y vender (bid) — no en el último precio negociado. El
+bot evalúa las dos direcciones posibles:
+
+- **Comprar en Binance (ask) y vender en Bitunix (bid)**
+- **Comprar en Bitunix (ask) y vender en Binance (bid)**
+
+y te avisa con la dirección que dé mejor spread, si supera el umbral
+configurado.
 
 ## Archivos
 
@@ -53,3 +66,4 @@ configurado. **No ejecuta ninguna operación**, solo notifica.
   abierto — solo vuelve a avisar si el spread se cerró y se volvió a abrir
 - Puedes agregar o quitar pares editando la variable `SYMBOLS` en Railway,
   sin tocar el código
+  
